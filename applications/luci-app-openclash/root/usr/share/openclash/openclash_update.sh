@@ -41,13 +41,9 @@ if [ "$1" = "one_key_update" ]; then
       LOG_OUT "Tip: If the download fails, try setting the CDN in Overwrite Settings - General Settings - Github Address Modify Options"
    fi
    if [ -n "$2" ]; then
-      /usr/share/openclash/openclash_core.sh "Dev" "$1" "$2" >/dev/null 2>&1 &
-      /usr/share/openclash/openclash_core.sh "TUN" "$1" "$2" >/dev/null 2>&1 &
       /usr/share/openclash/openclash_core.sh "Meta" "$1" "$2" >/dev/null 2>&1 &
       github_address_mod="$2"
    else
-      /usr/share/openclash/openclash_core.sh "Dev" "$1" >/dev/null 2>&1 &
-      /usr/share/openclash/openclash_core.sh "TUN" "$1" >/dev/null 2>&1 &
       /usr/share/openclash/openclash_core.sh "Meta" "$1" >/dev/null 2>&1 &
    fi
    
@@ -79,8 +75,8 @@ if [ -n "$OP_CV" ] && [ -n "$OP_LV" ] && [ "$(expr "$OP_LV" \> "$OP_CV")" -eq 1 
       
       if [ -z "$(opkg install /tmp/openclash.ipk --noaction 2>/dev/null |grep 'Upgrading luci-app-openclash on root' 2>/dev/null)" ]; then
          LOG_OUT "【OpenClash - v$LAST_VER】Pre Update Test Failed, The File is Saved in /tmp/openclash.ipk, Please Try to Update Manually!"
-         if [ "$(uci -q get openclash.config.config_reload)" -eq 0 ]; then
-      	    /etc/init.d/openclash restart >/dev/null 2>&1 &
+         if [ "$(uci -q get openclash.config.config_reload)" -eq 1 ]; then
+      	   /etc/init.d/openclash restart >/dev/null 2>&1 &
          else
             SLOG_CLEAN
          fi
@@ -113,7 +109,10 @@ uci -q commit openclash
 opkg remove --force-depends --force-remove luci-app-openclash
 LOG_OUT "Installing The New Version, Please Do Not Refresh The Page or Do Other Operations..."
 opkg install /tmp/openclash.ipk
-if [ "$?" == "0" ]; then
+if [ "$?" != "0" ] || [ -z "$(opkg info *openclash |grep Installed-Time)" ]; then
+   opkg install /tmp/openclash.ipk
+fi
+if [ "$?" == "0" ] && [ -n "$(opkg info *openclash |grep Installed-Time)" ]; then
    rm -rf /tmp/openclash.ipk >/dev/null 2>&1
    LOG_OUT "OpenClash Update Successful, About To Restart!"
    uci -q set openclash.config.enable=1
@@ -131,8 +130,8 @@ EOF
    else
       LOG_OUT "【OpenClash - v$LAST_VER】Download Failed, Please Check The Network or Try Again Later!"
       rm -rf /tmp/openclash.ipk >/dev/null 2>&1
-      if [ "$(uci -q get openclash.config.config_reload)" -eq 0 ]; then
-      	 /etc/init.d/openclash restart >/dev/null 2>&1 &
+      if [ "$(uci -q get openclash.config.config_reload)" -eq 1 ]; then
+         /etc/init.d/openclash restart >/dev/null 2>&1 &
       else
          SLOG_CLEAN
       fi
@@ -143,7 +142,7 @@ else
    else
       LOG_OUT "OpenClash Has not Been Updated, Stop Continuing!"
    fi
-   if [ "$(uci -q get openclash.config.config_reload)" -eq 0 ]; then
+   if [ "$(uci -q get openclash.config.config_reload)" -eq 1 ]; then
       /etc/init.d/openclash restart >/dev/null 2>&1 &
    else
       SLOG_CLEAN
