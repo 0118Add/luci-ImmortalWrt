@@ -36,7 +36,6 @@
 	background: none;
 	outline: none;
 	-webkit-appearance: none;
-	-webkit-text-size-adjust: none;
 }
 
 html {
@@ -1973,7 +1972,7 @@ ul.errors {
 		line-height: 1rem;
 	}
 
-	[data-page="admin-system-opkg"] .control-group {
+	[data-page="admin-system-package-manager"] .control-group {
 		flex-wrap: wrap;
 	}
 
